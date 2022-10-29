@@ -1,3 +1,4 @@
+import itertools
 import math
 import random
 import statistics
@@ -210,7 +211,8 @@ def evaluate_classifier(clf, X, y, folds=5):
     """
     results = cross_val_score(estimator=clf, X=X, y=y, cv=folds)
     accur = results.mean()
-    return accur
+    accur_std = results.std()
+    return accur, accur_std
 
 
 def calculate_priors(X, y):
@@ -407,5 +409,33 @@ def plot_learning_curve(X, y):
 
     plt.title("Learning Curve")
     plt.xlabel("Training Set Size"), plt.ylabel("Accuracy Score"), plt.legend(loc="best")
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_confusion_matrix(cm, classes,
+                          title='Confusion matrix',
+                          cmap=plt.cm.Blues):
+    """Plots the confusion matrix of the evaluation of the class for a specific digit
+                Args:
+                    cm (np.ndarray): confusion matrix from the test data and the predictions (n_predictedclasses x n_actualclasses)
+                    classes (set): unique classes of the dataset (n_actualclasses)
+            """
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+
+    fmt = 'd'
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt),
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
     plt.tight_layout()
     plt.show()

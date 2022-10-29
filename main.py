@@ -3,6 +3,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from numpy import arange, meshgrid
 from sklearn.decomposition import PCA
+from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import learning_curve
 
 import lib  # import lib.py that contains functions created for this exercise
@@ -78,6 +79,11 @@ success_rate = sum(preds == y_test) / len(preds)  # the number of successful pre
 # predictions
 print("\nThe success rate of the classifier is:", success_rate)
 
+cm = confusion_matrix(y_test, preds)
+print(cm)
+labels = set(y_test)
+lib.plot_confusion_matrix(cm, labels)
+
 # Step 12 -- Created Euclidean Classifier as scikit-learn estimator
 model = EuclideanDistanceClassifier()
 model.fit(X_train, y_train)
@@ -87,14 +93,14 @@ print('The score of the Euclidian Classifier (created as a scikit_learn estimato
 
 # Step 13 -- score using 5 fold cross-validation
 cross_score = lib.evaluate_classifier(model, X_train, y_train)
-print(f'\nScore estimated via cross-validation with 5 folds is: {cross_score * 100}%.')
+print(f'\nScore estimated via cross-validation with 5 folds is: {cross_score[0] * 100}% +-  {cross_score[1]}')
 
 # transforming the data to 2D using PCA (to use it for plotting decision region) and training the model again
 pca = PCA(n_components=2)
 X_test_2d = pca.fit_transform(X_test)
 X_train_2d = pca.fit_transform(X_train)
 
-# re-training the model again using the reduced features
+# re-training the model using the reduced features
 model_2d = EuclideanDistanceClassifier()
 model_2d.fit(X_train_2d, y_train)
 
