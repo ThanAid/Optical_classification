@@ -61,15 +61,13 @@ def digit_mean_at_pixel(X, y, digit, pixel=(10, 10)):
         :param pixel:
     """
     sum_pixel = 0
+    x_digit = X[y == digit]  # Find the samples of features for the specified digit
 
-    y_df = pd.DataFrame(y)  # Convert to df to find the index of each digit below
-    index_list = y_df[y_df[0] == digit].index.values  # find indexes of the digit
-
-    for i in range(len(index_list)):
-        arr = np.reshape(X[index_list[i]], (16, 16))
+    for i in range(len(x_digit)):
+        arr = np.reshape(x_digit[i], (16, 16))
         sum_pixel += arr[pixel[0], pixel[1]]
 
-    return sum_pixel / (len(index_list))
+    return sum_pixel / (len(x_digit))
 
 
 def digit_variance_at_pixel(X, y, digit, pixel=(10, 10)):
@@ -84,12 +82,10 @@ def digit_variance_at_pixel(X, y, digit, pixel=(10, 10)):
         :param pixel:
     """
     pixel_list = []
+    x_digit = X[y == digit]  # Find the samples of features for the specified digit
 
-    y_df = pd.DataFrame(y)  # Convert to df to find the index of each digit below
-    index_list = y_df[y_df[0] == digit].index.values  # find indexes of the digit
-
-    for i in range(len(index_list)):
-        arr = np.reshape(X[index_list[i]], (16, 16))
+    for i in range(len(x_digit)):
+        arr = np.reshape(x_digit[i], (16, 16))
         pixel_list.append(arr[pixel[0], pixel[1]])
 
     return statistics.variance(pixel_list)
