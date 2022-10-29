@@ -418,6 +418,8 @@ def plot_confusion_matrix(cm, classes,
                           cmap=plt.cm.Blues):
     """Plots the confusion matrix of the evaluation of the class for a specific digit
                 Args:
+                    cmap:
+                    title:
                     cm (np.ndarray): confusion matrix from the test data and the predictions (n_predictedclasses x n_actualclasses)
                     classes (set): unique classes of the dataset (n_actualclasses)
             """

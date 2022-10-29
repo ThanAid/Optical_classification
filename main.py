@@ -1,11 +1,8 @@
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from numpy import arange, meshgrid
 from sklearn.decomposition import PCA
 from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import learning_curve
-
 import lib  # import lib.py that contains functions created for this exercise
 from lib import EuclideanDistanceClassifier
 
@@ -51,8 +48,8 @@ plt.title('Digit 0 using variance')
 plt.show()
 
 # Step 9 --  Calculate mean and variance of all pixels of all digits
-mean_of_all = {}  # creating a dict to store the mean values for each digit e.g. mean_of_all = {digit: 16x16array}
-var_of_all = {}  # creating a dict to store the variance for each digit e.g. var_of_all = {digit: 16x16array}
+mean_of_all = np.empty((10, 256))  # creating an array to store the mean values for each digit (nDigits x nfeatures).
+var_of_all = np.empty((10, 256))  # creating an array to store the variance values for each digit (nDigits x nfeatures).
 
 for i in range(10):
     mean_of_all[i] = lib.digit_mean(X_train, y_train, i)
@@ -77,9 +74,9 @@ print("The real class (digit) of element 101 is:", y_test[101])
 
 success_rate = sum(preds == y_test) / len(preds)  # the number of successful predictions divided by the total number of
 # predictions
-print("\nThe success rate of the classifier is:", success_rate)
+print(f"\nThe success rate of the classifier is: {success_rate}.")
 
-cm = confusion_matrix(y_test, preds)
+cm = confusion_matrix(y_test, preds)  # Creating confusion matrix to check the model
 print(cm)
 labels = set(y_test)
 lib.plot_confusion_matrix(cm, labels)
@@ -89,11 +86,11 @@ model = EuclideanDistanceClassifier()
 model.fit(X_train, y_train)
 model.predict(X_test)
 score_model = model.score(X_test, y_test)
-print('The score of the Euclidian Classifier (created as a scikit_learn estimator) is', score_model)
+print(f'\nThe score of the Euclidian Classifier (created as a scikit_learn estimator) is {score_model}.')
 
-# Step 13 -- score using 5 fold cross-validation
-cross_score = lib.evaluate_classifier(model, X_train, y_train)
-print(f'\nScore estimated via cross-validation with 5 folds is: {cross_score[0] * 100}% +-  {cross_score[1]}')
+# Step 13 -- score using 5-fold cross-validation
+cross_score, score_std = lib.evaluate_classifier(model, X_train, y_train)
+print(f'\nScore estimated via cross-validation with 5 folds is: {cross_score * 100}% \u00B1 {score_std}.')
 
 # transforming the data to 2D using PCA (to use it for plotting decision region) and training the model again
 pca = PCA(n_components=2)
@@ -108,4 +105,4 @@ model_2d.fit(X_train_2d, y_train)
 lib.plot_decision_region(model_2d, X_train_2d, y_train)
 
 # Plotting learning curve
-lib.plot_learning_curve(X_train,y_train)
+lib.plot_learning_curve(X_train, y_train)
