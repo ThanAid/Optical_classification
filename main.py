@@ -39,12 +39,12 @@ variance_of_digit = lib.digit_variance(X_train, y_train, 0)
 
 # Step 7 -- plot digit 0 using mean values calculated at step 6
 plt.imshow(mean_of_digit.reshape(16, 16), cmap='gray')
-plt.title('Digit 0 using mean values')
+plt.title('Digit 0 using mean values', fontsize=20, fontweight="bold")
 plt.show()
 
 # Step 8 -- plot digit 0 using variance calculated at step 6
 plt.imshow(variance_of_digit.reshape(16, 16), cmap='gray')
-plt.title('Digit 0 using variance')
+plt.title('Digit 0 using variance', fontsize=20, fontweight="bold")
 plt.show()
 
 # Step 9 --  Calculate mean and variance of all pixels of all digits

@@ -19,7 +19,7 @@ def show_sample(X, index):
 
     arr = np.reshape(X[index], (16, 16))
     plt.imshow(arr, cmap='gray')
-    plt.title(f'Digit with index number: {index}', fontsize=20)
+    plt.title(f'Digit with index number: {index}', fontsize=20, fontweight="bold")
     plt.show()
 
 
@@ -42,6 +42,7 @@ def plot_digits_samples(X, y):
         ax.set_xticks([0, 4, 8, 12, 16])
         ax.set_yticks([0, 4, 8, 12, 16])
 
+    plt.suptitle("Plotting a random sample for each digit", fontsize=20, fontweight="bold")
     plt.show()
 
 
