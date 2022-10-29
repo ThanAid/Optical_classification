@@ -90,7 +90,7 @@ print(f'\nThe score of the Euclidian Classifier (created as a scikit_learn estim
 
 # Step 13 -- score using 5-fold cross-validation
 cross_score, score_std = lib.evaluate_classifier(model, X_train, y_train)
-print(f'\nScore estimated via cross-validation with 5 folds is: {cross_score * 100}% \u00B1 {score_std}.')
+print(f'\nScore estimated via cross-validation with 5 folds is: {cross_score * 100} \u00B1 {score_std * 100}%.')
 
 # transforming the data to 2D using PCA (to use it for plotting decision region) and training the model again
 pca = PCA(n_components=2)

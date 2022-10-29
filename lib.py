@@ -207,7 +207,7 @@ def evaluate_classifier(clf, X, y, folds=5):
         y (np.ndarray): Labels for dataset (nsamples)
         folds (int): the number of folds
     Returns:
-        (float): The 5-fold classification score (accuracy)
+        (float): The 5-fold classification mean score and std(accuracy)
     """
     results = cross_val_score(estimator=clf, X=X, y=y, cv=folds)
     accur = results.mean()
