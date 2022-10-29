@@ -19,6 +19,7 @@ def show_sample(X, index):
 
     arr = np.reshape(X[index], (16, 16))
     plt.imshow(arr, cmap='gray')
+    plt.title(f'Digit with index number: {index}', fontsize=20)
     plt.show()
 
 
