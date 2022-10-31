@@ -8,6 +8,7 @@ from numpy import arange, meshgrid
 from sklearn.base import BaseEstimator, ClassifierMixin
 import matplotlib.pyplot as plt
 from sklearn.model_selection import cross_val_score, learning_curve
+from scipy.stats import multivariate_normal
 
 
 def show_sample(X, index):
@@ -230,12 +231,17 @@ def calculate_priors(y):
 
 
 class CustomNBClassifier(BaseEstimator, ClassifierMixin):
-    """Custom implementation Naive Bayes classifier"""
+    """Custom implementation Naive Bayes classifier
+     var_smoothing : float, default=1e-9
+        Portion of the largest variance of all features that is added to
+        variances for calculation stability."""
 
-    def __init__(self, use_unit_variance=False):
+    def __init__(self, use_unit_variance=False, var_smoothing=1e-9):
         self.use_unit_variance = use_unit_variance
         self.X_mean_ = None
         self.X_var_ = None
+        self.priors_ = None
+        self.var_smoothing = var_smoothing
 
     def fit(self, X, y):
         """
@@ -255,25 +261,50 @@ class CustomNBClassifier(BaseEstimator, ClassifierMixin):
             mean_arr[i] = digit_mean(X, y, i)  # Calculate the mean values of features
             var_arr[i] = digit_variance(X, y, i)  # Calculate the variance values of features
 
+        counted = calculate_priors(y)
+
         self.X_mean_ = mean_arr
-        self.X_var_ = var_arr
+        if not self.use_unit_variance:
+            self.X_var_ = var_arr
+        else:
+            self.X_var_ = np.ones_like(var_arr) # if use_unit_variance is True then the variance values will be set as 1
+        self.priors_ = counted
 
         return self
-        # return self
 
     def predict(self, X):
         """
         Make predictions for X based on the
-        euclidean distance from self.X_mean_
+        Bayes Theorem
+        Args:
+            X (np.ndarray): Digits data (nsamples x nfeatures)
         """
-        raise NotImplementedError
+        preds = []
+        # adding a small value to the variance values of the features to avoid being treated as 0 if they are too small
+        var = self.X_var_ + (self.var_smoothing * self.X_var_.max())
+
+        for i in range(len(X)):  # Calculating how many digits we have stored in X
+            posterior = []  # list that will store posterior
+
+            for digit in range(10):
+                pxc = np.prod((1 / (np.sqrt((2 * np.pi * var[digit])))) * np.exp(  # Calculating the Π(P(x|y))
+                    -np.power(X[i] - self.X_mean_[digit], 2) / (2 * var[digit])))
+
+                posterior.append(np.log(pxc) + np.log(self.priors_[digit])) # appending the result from Decision
+                # function for that digit (possibility for that sample to be classified as that digit)
+
+            preds.append(posterior.index(max(posterior))) # append the index of the max value of the posterior list,
+            # meaning that the sample gets classified as the digit with the max likelihood
+
+        return np.array(preds)
 
     def score(self, X, y):
         """
         Return accuracy score on the predictions
         for X based on ground truth y
         """
-        raise NotImplementedError
+
+        return sum(self.predict(X) == y) / len(y)
 
 
 class PytorchNNModel(BaseEstimator, ClassifierMixin):
@@ -330,10 +361,10 @@ def evaluate_sklearn_nb_classifier(X, y, folds=5):
     raise NotImplementedError
 
 
-def evaluate_custom_nb_classifier(X, y, folds=5):
+def evaluate_custom_nb_classifier(clf, X, y, folds=5):
     """ Create a custom naive bayes classifier and evaluate it using cross-validation
-    Calls evaluate_classifier
-    """
+    Calls evaluate_classifier"""
+
     raise NotImplementedError
 
 

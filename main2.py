@@ -1,10 +1,11 @@
-import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
-from sklearn.decomposition import PCA
-from sklearn.metrics import confusion_matrix
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
 import lib  # import lib.py that contains functions created for this exercise
 from lib import EuclideanDistanceClassifier
+import warnings #TODO na to vgaloume?
+warnings.filterwarnings("ignore")
 
 # Step 1 -- Read data and assign values.
 test_data = pd.read_csv('test.txt', sep=' ', header=None)
@@ -25,5 +26,78 @@ print('a priors:', counted)
 # TODO bar graph
 
 # Step 15 -- Naive Bayesian Classifier
+print('\n--------------Custom Model--------------')
 model = lib.CustomNBClassifier()
+model.fit(X_train, y_train)  # fitting the model
+# i = 1e-9
+# temp_smoothie = []
+# while i < 1:
+#     temp_smoothie.append(i)
+#     i *= 2
+# for var_smoother in temp_smoothie:
+#     model = lib.CustomNBClassifier(var_smoothing=var_smoother)
+#     model.fit(X_train, y_train)
+#     preds = model.predict(X_test)
+#     print(sum(preds==y_test), var_smoother) # TODO plot line
+score = model.score(X_test, y_test)
+print('The score of the custom model is:', score * 100, '%.')
+cross_score, score_std = lib.evaluate_classifier(model, X_train, y_train)
+print(f'\nScore estimated via cross-validation for Custom NB with 5 folds is:'
+      f' {cross_score * 100} \u00B1 {score_std * 100}%.')
+
+print('\n--------------Gaussian Model--------------')
+# Now GaussianNB will be used and compared to the custom above
+model = GaussianNB()
 model.fit(X_train, y_train)
+score = model.score(X_test, y_test)
+print('The score of the Gaussian NB model is:', score * 100, '%.')
+cross_score, score_std = lib.evaluate_classifier(model, X_train, y_train)
+print(f'\nScore estimated via cross-validation for Gaussian NB with 5 folds is:'
+      f' {cross_score * 100} \u00B1 {score_std * 100}%.')
+
+# Step 16 -- Setting variance values "1" and re-training the model
+print('\n--------------Custom Model--------------')
+print('Setting variance 1 for all features')
+model = lib.CustomNBClassifier(use_unit_variance=True)
+model.fit(X_train, y_train)  # fitting the model
+score = model.score(X_test, y_test)
+print('The score of the custom model is:', score * 100, '%.')
+cross_score, score_std = lib.evaluate_classifier(model, X_train, y_train)
+print(f'\nScore estimated via cross-validation for Custom NB with 5 folds is:'
+      f' {cross_score * 100} \u00B1 {score_std * 100}%.')
+
+# Step 17 -- Naive Bayes, Nearest Neighbors, SVM comparison
+# Creating all models needed and appending them to a list of models
+models = []
+model_custom_nb = lib.CustomNBClassifier()
+models.append(model_custom_nb)
+model_nearest_n1 = KNeighborsClassifier(n_neighbors=1)
+models.append(model_nearest_n1)
+model_nearest_n3 = KNeighborsClassifier(n_neighbors=3)
+models.append(model_nearest_n3)
+model_svm_linear = SVC(kernel='linear')
+models.append(model_svm_linear)
+model_svm_poly = SVC(kernel='poly')
+models.append(model_svm_poly)
+model_svm_rbf = SVC(kernel='rbf')
+models.append(model_svm_rbf)
+model_svm_sigmoid = SVC(kernel='sigmoid')
+models.append(model_svm_sigmoid)
+
+# fit models
+for mod in models:
+    mod.fit(X_train, y_train)
+
+# evaluating models' score
+print('\n-------------------Model scores-----------------------')
+model_dict = {}  # dictionary to store scores for each model
+for mod in models:
+    model_dict[mod] = mod.score(X_test, y_test)
+    print(f'Model "{mod}" has score {model_dict[mod] * 100}%')
+
+# evaluating models' 5 fold CV
+print('\n-------------------Model 5-fold CV-----------------------')
+model_dict5 = {}
+for mod in models:
+    model_dict5[mod] = lib.evaluate_classifier(mod, X_train, y_train)
+    print(f'Model "{mod}" has 5 fold CV {model_dict5[mod][0] * 100}% \u00B1 {model_dict5[mod][1] * 100}%.')
