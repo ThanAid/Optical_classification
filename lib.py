@@ -213,15 +213,20 @@ def evaluate_classifier(clf, X, y, folds=5):
     return accur, accur_std
 
 
-def calculate_priors(X, y):
+def calculate_priors(y):
     """Return the a-priori probabilities for every class
     Args:
-        X (np.ndarray): Digits data (nsamples x nfeatures)
         y (np.ndarray): Labels for dataset (nsamples)
     Returns:
         (np.ndarray): (n_classes) Prior probabilities for every class
     """
-    raise NotImplementedError
+    counted = []
+    n = len(y)
+
+    for digit in range(10):
+        counted.append(np.count_nonzero(y == digit))
+
+    return np.array([a / n for a in counted])
 
 
 class CustomNBClassifier(BaseEstimator, ClassifierMixin):
@@ -229,17 +234,31 @@ class CustomNBClassifier(BaseEstimator, ClassifierMixin):
 
     def __init__(self, use_unit_variance=False):
         self.use_unit_variance = use_unit_variance
+        self.X_mean_ = None
+        self.X_var_ = None
 
     def fit(self, X, y):
         """
         This should fit classifier. All the "work" should be done here.
         Calculates self.X_mean_ based on the mean
         feature values in X for each class.
-        self.X_mean_ becomes a numpy.ndarray of shape
+        Calculates self.X_var_ based on the variance
+        feature values in X for each class.
+        self.X_mean_  and self.X_var_ becomes a numpy.ndarray of shape
         (n_classes, n_features)
         fit always returns self.
         """
-        raise NotImplementedError
+        mean_arr = np.empty([10, X.shape[1]])
+        var_arr = np.empty_like(mean_arr)
+
+        for i in range(10):
+            mean_arr[i] = digit_mean(X, y, i)  # Calculate the mean values of features
+            var_arr[i] = digit_variance(X, y, i)  # Calculate the variance values of features
+
+        self.X_mean_ = mean_arr
+        self.X_var_ = var_arr
+
+        return self
         # return self
 
     def predict(self, X):
@@ -419,7 +438,7 @@ def plot_confusion_matrix(cm, classes,
                     cmap:
                     title:
                     cm (np.ndarray): confusion matrix from the test data and the predictions (n_predictedclasses x n_actualclasses)
-                    classes (set): unique classes of the dataset (n_actualclasses)
+                    classes (list): unique classes of the dataset (n_actualclasses)
             """
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)

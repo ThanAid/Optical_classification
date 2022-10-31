@@ -17,6 +17,8 @@ X_test = test_data.drop([0], axis=1).to_numpy()
 y_train = train_data[0].to_numpy()
 X_train = train_data.drop([0], axis=1).to_numpy()
 
+print('Data uploaded.')
+
 # Step 2 -- print digit 131
 lib.show_sample(X_train, 131)
 
@@ -78,7 +80,7 @@ print(f"\nThe success rate of the classifier is: {success_rate}.")
 
 cm = confusion_matrix(y_test, preds)  # Creating confusion matrix to check the model
 print(cm)
-labels = set(y_test)
+labels = sorted(set(y_test))
 lib.plot_confusion_matrix(cm, labels)
 
 # Step 12 -- Created Euclidean Classifier as scikit-learn estimator
@@ -106,3 +108,5 @@ lib.plot_decision_region(model_2d, X_train_2d, y_train)
 
 # Plotting learning curve
 lib.plot_learning_curve(X_train, y_train)
+
+# Step 14 -- calculating a-priors
