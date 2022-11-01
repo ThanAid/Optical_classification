@@ -4,7 +4,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 import lib  # import lib.py that contains functions created for this exercise
 from lib import EuclideanDistanceClassifier
-import warnings #TODO na to vgaloume?
+import warnings  # TODO na to vgaloume?
+
 warnings.filterwarnings("ignore")
 
 # Step 1 -- Read data and assign values.
@@ -20,51 +21,52 @@ X_train = train_data.drop([0], axis=1).to_numpy()
 
 print('Data uploaded.')
 
+
 # Step 14 -- calculating a-priors
 counted = lib.calculate_priors(y_train)
-print('a priors:', counted)
-# TODO bar graph
+print('\n------------------a priors------------------\n', counted)
+lib.bar_plot([i for i in range(10)], counted, title='a-prior for each Digit', x_label='Digit', y_label='%')  # bar plot
+print('--------------------------------------------')
+
 
 # Step 15 -- Naive Bayesian Classifier
 print('\n--------------Custom Model--------------')
 model = lib.CustomNBClassifier()
 model.fit(X_train, y_train)  # fitting the model
-# i = 1e-9
-# temp_smoothie = []
-# while i < 1:
-#     temp_smoothie.append(i)
-#     i *= 2
-# for var_smoother in temp_smoothie:
-#     model = lib.CustomNBClassifier(var_smoothing=var_smoother)
-#     model.fit(X_train, y_train)
-#     preds = model.predict(X_test)
-#     print(sum(preds==y_test), var_smoother) # TODO plot line
-score = model.score(X_test, y_test)
+score = model.score(X_test, y_test)  # model score
 print('The score of the custom model is:', score * 100, '%.')
-cross_score, score_std = lib.evaluate_classifier(model, X_train, y_train)
+
+cross_score, score_std = lib.evaluate_classifier(model, X_train, y_train)  # 5-fold cv score
 print(f'\nScore estimated via cross-validation for Custom NB with 5 folds is:'
       f' {cross_score * 100} \u00B1 {score_std * 100}%.')
+print('--------------------------------------------')
 
 print('\n--------------Gaussian Model--------------')
 # Now GaussianNB will be used and compared to the custom above
 model = GaussianNB()
 model.fit(X_train, y_train)
-score = model.score(X_test, y_test)
+score = model.score(X_test, y_test)  # model score
 print('The score of the Gaussian NB model is:', score * 100, '%.')
-cross_score, score_std = lib.evaluate_classifier(model, X_train, y_train)
-print(f'\nScore estimated via cross-validation for Gaussian NB with 5 folds is:'
+
+cross_score, score_std = lib.evaluate_classifier(model, X_train, y_train)  # 5-fold cv score
+print(f'\nScore estimated via cross-validation for Gaussian NB with 5 folds is:'  
       f' {cross_score * 100} \u00B1 {score_std * 100}%.')
+print('--------------------------------------------')
+
 
 # Step 16 -- Setting variance values "1" and re-training the model
 print('\n--------------Custom Model--------------')
 print('Setting variance 1 for all features')
 model = lib.CustomNBClassifier(use_unit_variance=True)
 model.fit(X_train, y_train)  # fitting the model
-score = model.score(X_test, y_test)
+score = model.score(X_test, y_test)  # model score
 print('The score of the custom model is:', score * 100, '%.')
-cross_score, score_std = lib.evaluate_classifier(model, X_train, y_train)
+
+cross_score, score_std = lib.evaluate_classifier(model, X_train, y_train)  # 5-fold cv score
 print(f'\nScore estimated via cross-validation for Custom NB with 5 folds is:'
       f' {cross_score * 100} \u00B1 {score_std * 100}%.')
+print('-------------------------------------------------------')
+
 
 # Step 17 -- Naive Bayes, Nearest Neighbors, SVM comparison
 # Creating all models needed and appending them to a list of models
@@ -88,12 +90,18 @@ models.append(model_svm_sigmoid)
 for mod in models:
     mod.fit(X_train, y_train)
 
+
 # evaluating models' score
 print('\n-------------------Model scores-----------------------')
 model_dict = {}  # dictionary to store scores for each model
 for mod in models:
-    model_dict[mod] = mod.score(X_test, y_test)
-    print(f'Model "{mod}" has score {model_dict[mod] * 100}%')
+    model_dict[mod] = mod.score(X_test, y_test) * 100
+    print(f'Model "{mod}" has score {model_dict[mod]}%')
+
+lib.bar_plot([i for i in range(7)], model_dict.values(), title="Model score", x_label='Model', y_label='%', LABELS=
+['CustomNBC', 'Kn1', 'Kn3', 'SVC(lin)', 'SVC(poly)', 'SVC', 'SVC(sigm)'])  # bar plot the results
+
+print('--------------------------------------------------------')
 
 # evaluating models' 5 fold CV
 print('\n-------------------Model 5-fold CV-----------------------')
@@ -101,3 +109,9 @@ model_dict5 = {}
 for mod in models:
     model_dict5[mod] = lib.evaluate_classifier(mod, X_train, y_train)
     print(f'Model "{mod}" has 5 fold CV {model_dict5[mod][0] * 100}% \u00B1 {model_dict5[mod][1] * 100}%.')
+
+lib.bar_plot([i for i in range(7)], [v[0] * 100 for v in model_dict5.values()], title="5-fold CV score",
+             x_label='Model',
+             y_label='%', LABELS=['CustomNBC', 'Kn1', 'Kn3', 'SVC(lin)', 'SVC(poly)', 'SVC', 'SVC(sigm)'])  # bar
+# plot the results
+print('-----------------------------------------------------------')

@@ -5,6 +5,7 @@ import statistics
 import numpy as np
 import pandas as pd
 from numpy import arange, meshgrid
+from scipy.interpolate import interp1d
 from sklearn.base import BaseEstimator, ClassifierMixin
 import matplotlib.pyplot as plt
 from sklearn.model_selection import cross_val_score, learning_curve
@@ -267,7 +268,8 @@ class CustomNBClassifier(BaseEstimator, ClassifierMixin):
         if not self.use_unit_variance:
             self.X_var_ = var_arr
         else:
-            self.X_var_ = np.ones_like(var_arr) # if use_unit_variance is True then the variance values will be set as 1
+            self.X_var_ = np.ones_like(
+                var_arr)  # if use_unit_variance is True then the variance values will be set as 1
         self.priors_ = counted
 
         return self
@@ -290,10 +292,10 @@ class CustomNBClassifier(BaseEstimator, ClassifierMixin):
                 pxc = np.prod((1 / (np.sqrt((2 * np.pi * var[digit])))) * np.exp(  # Calculating the Π(P(x|y))
                     -np.power(X[i] - self.X_mean_[digit], 2) / (2 * var[digit])))
 
-                posterior.append(np.log(pxc) + np.log(self.priors_[digit])) # appending the result from Decision
+                posterior.append(np.log(pxc) + np.log(self.priors_[digit]))  # appending the result from discriminative
                 # function for that digit (possibility for that sample to be classified as that digit)
 
-            preds.append(posterior.index(max(posterior))) # append the index of the max value of the posterior list,
+            preds.append(posterior.index(max(posterior)))  # append the index of the max value of the posterior list,
             # meaning that the sample gets classified as the digit with the max likelihood
 
         return np.array(preds)
@@ -488,4 +490,61 @@ def plot_confusion_matrix(cm, classes,
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
     plt.tight_layout()
+    plt.show()
+
+
+def bar_plot(x, y, title='title', x_label='x', y_label='y', LABELS=None):
+    """Plots a bar plot
+                Args:
+                    x (list): values used on x axes
+                    y (list): values used on y axes
+                    title (str)
+                    x_label (str)
+                    y_label (str)
+                    LABELS (list): custom labels for x axis
+            """
+    # creating the bar plot
+    fig = plt.bar(x, y, color='maroon',
+                  width=0.5)
+
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.title(title, fontsize=16)
+    plt.bar_label(fig, labels=['%.3f' % e for e in y])
+    plt.xticks(x, LABELS)
+    if LABELS is not None: plt.xticks(rotation=45, ha='right', fontsize=6, fontweight='bold')
+    plt.show()
+
+
+def var_smooth_score(X, y, X_valid, y_valid, start_value=1e-9, step=2, log=False):
+    """Plots a line plot about var smoothing values for the Custom NBC model
+            Args:
+                X (np.ndarray): Digits data (nsamples x nfeatures)
+                y (np.ndarray): Labels for dataset (nsamples)
+                X_valid (np.ndarray): Digits data (nsamples x nfeatures)
+                y_valid (np.ndarray): Labels for dataset (nsamples)
+                start_value (int): the starting value for the smoother
+                step (int): step of multipl for start_value
+                log (bool): if True then x axis is converted to log values
+                """
+    temp_smoothie = []
+    smoothies = {}
+    while start_value < 0.5:
+        temp_smoothie.append(start_value)
+        start_value *= step
+    for var_smoother in temp_smoothie:
+        model = CustomNBClassifier(var_smoothing=var_smoother)
+        model.fit(X, y)
+        preds = model.predict(X_valid)
+        smoothies[var_smoother] = sum(preds == y_valid)
+
+    y_ax = smoothies.values()
+    if not log:
+        x_ax = smoothies.keys()
+    else:
+        x_ax = [math.log(k) for k in smoothies.keys()]
+
+    plt.plot(x_ax, y_ax)
+    plt.title('Var smoother Score', fontsize=16)
+    plt.xlabel('Smoother value')
     plt.show()
