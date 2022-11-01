@@ -5,11 +5,9 @@ import statistics
 import numpy as np
 import pandas as pd
 from numpy import arange, meshgrid
-from scipy.interpolate import interp1d
 from sklearn.base import BaseEstimator, ClassifierMixin
 import matplotlib.pyplot as plt
 from sklearn.model_selection import cross_val_score, learning_curve
-from scipy.stats import multivariate_normal
 
 
 def show_sample(X, index):
