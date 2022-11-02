@@ -4,10 +4,13 @@ import random
 import statistics
 import numpy as np
 import pandas as pd
+import torch
+from torch import nn, optim
+from torch.utils.data import Dataset, DataLoader
 from numpy import arange, meshgrid
 from sklearn.base import BaseEstimator, ClassifierMixin
 import matplotlib.pyplot as plt
-from sklearn.model_selection import cross_val_score, learning_curve
+from sklearn.model_selection import cross_val_score, learning_curve, train_test_split
 
 
 def show_sample(X, index):
@@ -308,92 +311,162 @@ class CustomNBClassifier(BaseEstimator, ClassifierMixin):
 
 
 class PytorchNNModel(BaseEstimator, ClassifierMixin):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, batch_size, layers, n_features, n_classes, epochs, learning_rate):
         # WARNING: Make sure predict returns the expected (nsamples) numpy array not a torch tensor.
-        # TODO: initialize model, criterion and optimizer
-        self.model = ...
-        self.criterion = ...
-        self.optimizer = ...
-        raise NotImplementedError
+        self.epochs = epochs
+        self.layers = layers
+        self.n_features = n_features
+        self.n_classes = n_classes
+        self.model = MyNeuralNet(self.layers, self.n_features, self.n_classes)
+        self.criterion = nn.CrossEntropyLoss()
+        self.learning_rate = learning_rate
+        self.optimizer = optim.SGD(self.model.parameters(), lr=self.learning_rate)
+        self.batch_size = batch_size
+        self.accuracy = None
 
-    def fit(self, X, y):
-        # TODO: split X, y in train and validation set and wrap in pytorch dataloaders
-        train_loader = ...
-        val_loader = ...
-        # TODO: Train model
-        raise NotImplementedError
+    def fit(self, X, y, test_size=0.0, printing=False):
+        if test_size == 0.0:
+            train_data = NN_data(X, y, trans=ToTensor())
+        else:
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size)
+            train_data = NN_data(X_train, y_train, trans=ToTensor())
+            test_data = NN_data(X_test, y_test, trans=ToTensor())
+            test_dl = DataLoader(test_data, batch_size=self.batch_size, shuffle=True)
+
+        train_dl = DataLoader(train_data, batch_size=self.batch_size, shuffle=True)
+
+        # the following script defines the training procedure/loop
+
+        self.model.train()  # gradients "on"
+        store_ep = {}
+        for epoch in range(self.epochs):  # loop through dataset
+            running_average_loss = 0
+            for i, data in enumerate(train_dl):  # loop through batches
+                X_batch, y_batch = data  # get the features and labels
+                self.optimizer.zero_grad()  # ALWAYS USE THIS!!
+                out = self.model(X_batch)  # forward pass
+                loss = self.criterion(out, y_batch)  # compute per batch loss
+                loss.backward()  # compute gradients based on the loss function
+                self.optimizer.step()  # update weights
+
+                running_average_loss += loss.detach().item()
+
+                if i % 100 == 0 and printing:
+                    print("Epoch: {} \t Batch: {} \t Loss {}".format(epoch, i,
+                                                                     float(running_average_loss) / (i + 1)))
+                    store_ep[epoch] = float(running_average_loss) / (i + 1)
+
+        if printing:  # if printing is set true then a plot for loss according to different epochs
+            plt.plot(store_ep.keys(), store_ep.values())
+            plt.title('Loss', fontsize=16)
+            plt.xlabel('Epoch value')
+            plt.show()
+
+        if test_size != 0:
+            self.model.eval()  # turns off batchnorm/dropout ...
+            acc = 0
+            n_samples = 0
+            with torch.no_grad():  # no gradients required!! eval mode, speeds up computation
+                for i, data in enumerate(test_dl):
+                    X_batch, y_batch = data  # test data and labels
+                    out = self.model(X_batch)  # get net's predictions
+                    val, y_pred = out.max(1)  # argmax since output is a prob distribution
+                    acc += (y_batch == y_pred).sum().detach().item()  # get accuracy
+                    n_samples += X_batch.size(0)
+
+            self.accuracy = acc / n_samples
+
+        return self
 
     def predict(self, X):
-        # TODO: wrap X in a test loader and evaluate
-        test_loader = ...
-        raise NotImplementedError
+        X_test = torch.from_numpy(X).type(torch.FloatTensor)  # Convert data
+        self.model.eval()  # evaluate model
+
+        with torch.no_grad():
+            out = self.model(X_test)  # get net's predictions
+            val, y_pred = out.max(1)
+        return y_pred
 
     def score(self, X, y):
         # Return accuracy score.
-        raise NotImplementedError
+
+        return (self.predict(X) - y == 0).sum() / len(y)
 
 
-def evaluate_linear_svm_classifier(X, y, folds=5):
-    """ Create an svm with linear kernel and evaluate it using cross-validation
-    Calls evaluate_classifier
-    """
-    raise NotImplementedError
+# always inherit from nn.Module
+class LinearWActivation(nn.Module):
+    def __init__(self, in_features, out_features, activation='sigmoid'):
+        super(LinearWActivation, self).__init__()
+        # nn.Linear is just a matrix of [in_features, out_features] randomly initialized
+        self.f = nn.Linear(in_features, out_features)
+        if activation == 'sigmoid':
+            self.a = nn.Sigmoid()
+        else:
+            self.a = nn.ReLU()
+
+        # this would also do the job
+        # self.t = nn.Sequenntial(self.f, self. a)
+
+    # the forward pass of info through the net
+    def forward(self, x):
+        return self.a(self.f(x))
 
 
-def evaluate_rbf_svm_classifier(X, y, folds=5):
-    """ Create an svm with rbf kernel and evaluate it using cross-validation
-    Calls evaluate_classifier
-    """
-    raise NotImplementedError
+class NN_data(Dataset):
+    def __init__(self, X, y, trans=None):
+        # all the available data are stored in a list
+        self.data = list(zip(X, y))
+        # we optionally may add a transformation on top of the given data
+        # this is called augmentation in realistic setups
+        self.trans = trans
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        if self.trans is not None:
+            return self.trans(self.data[idx])
+        else:
+            return self.data[idx]
 
 
-def evaluate_knn_classifier(X, y, folds=5):
-    """ Create a knn and evaluate it using cross-validation
-    Calls evaluate_classifier
-    """
-    raise NotImplementedError
+class ToTensor(object):
+    """converts a numpy object to a torch tensor"""
+
+    def __init__(self):
+        pass
+
+    def __call__(self, datum):
+        x, y = datum[0], datum[1]
+        tx, ty = torch.from_numpy(x).type(torch.FloatTensor), torch.from_numpy(np.asarray(y)).type(torch.LongTensor)
+        return tx, ty
 
 
-def evaluate_sklearn_nb_classifier(X, y, folds=5):
-    """ Create an sklearn naive bayes classifier and evaluate it using cross-validation
-    Calls evaluate_classifier
-    """
-    raise NotImplementedError
+class MyNeuralNet(nn.Module):
+    def __init__(self, layers, n_features, n_classes, activation='sigmoid'):
+        '''
+        Args:
+          layers (list): a list of the number of consecutive layers
+          n_features (int):  the number of input features
+          n_classes (int): the number of output classes
+          activation (str): type of non-linearity to be used
+        '''
+        super(MyNeuralNet, self).__init__()
+        layers_in = [n_features] + layers  # list concatenation
+        layers_out = layers + [n_classes]
+        # loop through layers_in and layers_out lists
+        self.f = nn.Sequential(*[
+            LinearWActivation(in_feats, out_feats, activation=activation)
+            for in_feats, out_feats in zip(layers_in, layers_out)
+        ])
+        # final classification layer is always a linear mapping
+        self.clf = nn.Linear(n_classes, n_classes)
 
-
-def evaluate_custom_nb_classifier(clf, X, y, folds=5):
-    """ Create a custom naive bayes classifier and evaluate it using cross-validation
-    Calls evaluate_classifier"""
-
-    raise NotImplementedError
-
-
-def evaluate_euclidean_classifier(X, y, folds=5):
-    """ Create a euclidean classifier and evaluate it using cross-validation
-    Calls evaluate_classifier
-    """
-    raise NotImplementedError
-
-
-def evaluate_nn_classifier(X, y, folds=5):
-    """ Create a pytorch nn classifier and evaluate it using cross-validation
-    Calls evaluate_classifier
-    """
-    raise NotImplementedError
-
-
-def evaluate_voting_classifier(X, y, folds=5):
-    """ Create a voting ensemble classifier and evaluate it using cross-validation
-    Calls evaluate_classifier
-    """
-    raise NotImplementedError
-
-
-def evaluate_bagging_classifier(X, y, folds=5):
-    """ Create a bagging ensemble classifier and evaluate it using cross-validation
-    Calls evaluate_classifier
-    """
-    raise NotImplementedError
+    def forward(self, x):  # again the forward pass
+        # apply non-linear composition of layers/functions
+        y = self.f(x)
+        # return an affine transformation of y <-> classification layer
+        return self.clf(y)
 
 
 def plot_decision_region(model, X, y):
@@ -545,4 +618,15 @@ def var_smooth_score(X, y, X_valid, y_valid, start_value=1e-9, step=2, log=False
     plt.plot(x_ax, y_ax)
     plt.title('Var smoother Score', fontsize=16)
     plt.xlabel('Smoother value')
+    plt.show()
+
+
+def plot_layers_score(layers=None, score=None):
+    if score is None:
+        score = [0.8929, 0.9108, 0.9148, 0.9123, 0.9058, 0.9158, 0.9128, 0.9163, 0.9183, 0.9198]
+    if layers is None:
+        layers = [20, 40, 60, 80, 100, 120, 140, 160, 180, 200]
+    plt.plot(layers, score)
+    plt.title('Score', fontsize=16)
+    plt.xlabel('Layer = [i,i]')
     plt.show()
