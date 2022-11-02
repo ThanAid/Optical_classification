@@ -621,12 +621,12 @@ def var_smooth_score(X, y, X_valid, y_valid, start_value=1e-9, step=2, log=False
     plt.show()
 
 
-def plot_layers_score(layers=None, score=None):
+def plot_neurons_score(neurons=None, score=None):
     if score is None:
         score = [0.8929, 0.9108, 0.9148, 0.9123, 0.9058, 0.9158, 0.9128, 0.9163, 0.9183, 0.9198]
-    if layers is None:
-        layers = [20, 40, 60, 80, 100, 120, 140, 160, 180, 200]
-    plt.plot(layers, score)
+    if neurons is None:
+        neurons = [20, 40, 60, 80, 100, 120, 140, 160, 180, 200]
+    plt.plot(neurons, score)
     plt.title('Score', fontsize=16)
-    plt.xlabel('Layer = [i,i]')
+    plt.xlabel('Number of neurons per Layer')
     plt.show()
