@@ -138,13 +138,13 @@ print(f'Model has 5 fold CV {voting_score5 * 100}% \u00B1 {std5 * 100}%.')
 # Using Bagging Classifier to ensemble the models
 bilbo = BaggingClassifier(base_estimator=models[0],n_estimators=10, random_state=0).fit(X_train, y_train)
 score_nb = bilbo.score(X_test, y_test)
-print(f'\nBagging Classifier has score {score_nb *100}%')
+print(f'\nBagging Classifier (Custom NB) has score {score_nb *100}%')
 score_nb5, std_nb5 = lib.evaluate_classifier(bilbo, X_train, y_train)
 print(f'Model has 5 fold CV {score_nb5 * 100}% \u00B1 {std_nb5 * 100}%.')
 
 bilbo_svc = BaggingClassifier(base_estimator=models[4],n_estimators=10, random_state=0).fit(X_train, y_train)
 score_svc = bilbo_svc.score(X_test, y_test)
-print(f'\nBagging Classifier has score {score_svc *100}%')
+print(f'\nBagging Classifier (SVC poly) has score {score_svc *100}%')
 score_svc5, std_svc5 = lib.evaluate_classifier(bilbo_svc, X_train, y_train)
 print(f'Model has 5 fold CV {score_svc5 * 100}% \u00B1 {std_svc5 * 100}%.')
 
