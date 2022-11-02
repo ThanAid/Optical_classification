@@ -324,15 +324,12 @@ class PytorchNNModel(BaseEstimator, ClassifierMixin):
         self.batch_size = batch_size
         self.accuracy = None
 
-    def fit(self, X, y, test_size=0.0, printing=False):
-        if test_size == 0.0:
-            train_data = NN_data(X, y, trans=ToTensor())
-        else:
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size)
-            train_data = NN_data(X_train, y_train, trans=ToTensor())
-            test_data = NN_data(X_test, y_test, trans=ToTensor())
-            test_dl = DataLoader(test_data, batch_size=self.batch_size, shuffle=True)
+    def fit(self, X, y, test_size=None, printing=False):
 
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size)
+        train_data = NN_data(X_train, y_train, trans=ToTensor())
+        test_data = NN_data(X_test, y_test, trans=ToTensor())
+        test_dl = DataLoader(test_data, batch_size=self.batch_size, shuffle=True)
         train_dl = DataLoader(train_data, batch_size=self.batch_size, shuffle=True)
 
         # the following script defines the training procedure/loop
@@ -362,7 +359,7 @@ class PytorchNNModel(BaseEstimator, ClassifierMixin):
             plt.xlabel('Epoch value')
             plt.show()
 
-        if test_size != 0:
+        if test_size is not None and test_size > 0:
             self.model.eval()  # turns off batchnorm/dropout ...
             acc = 0
             n_samples = 0
@@ -384,13 +381,13 @@ class PytorchNNModel(BaseEstimator, ClassifierMixin):
 
         with torch.no_grad():
             out = self.model(X_test)  # get net's predictions
-            val, y_pred = out.max(1)
-        return y_pred
+            val, y_pred = out.max(1)  # argmax since output is a prob distribution
+        return y_pred.cpu().detach().numpy()
 
     def score(self, X, y):
         # Return accuracy score.
 
-        return (self.predict(X) - y == 0).sum() / len(y)
+        return float((self.predict(X) - y == 0).sum() / len(y))
 
 
 # always inherit from nn.Module

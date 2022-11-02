@@ -27,7 +27,8 @@ print('\n-------------------------Custom NN model-------------------------------
 nn_model = lib.PytorchNNModel(batch_size=32, layers=[60, 60], n_classes=10, n_features=X_train.shape[1], epochs=80,
                               learning_rate=0.1)
 nn_model.fit(X_train, y_train, test_size=0.2, printing=False)  # fit model with 80-20 split data
-print('Score (80 - 20 split): ', nn_model.score(X_test, y_test))
+print(f'Validation score (80 - 20 split) {100*nn_model.accuracy}%.')
+print(f'Actual model Score on Test data (80 - 20 split): {nn_model.score(X_test, y_test)*100}%.')
 voting_score5, std5 = lib.evaluate_classifier(nn_model, X_train, y_train)
 print(f'Model has 5 fold CV {voting_score5 * 100}% \u00B1 {std5 * 100}%.')
 
@@ -35,7 +36,7 @@ print(f'Model has 5 fold CV {voting_score5 * 100}% \u00B1 {std5 * 100}%.')
 nn_model = lib.PytorchNNModel(batch_size=32, layers=[60, 60], n_classes=10, n_features=X_train.shape[1], epochs=80,
                               learning_rate=0.1)
 nn_model.fit(X_train, y_train)  # fit model with all the train data
-print('\nModel Score trained with whole train data: ', nn_model.score(X_test, y_test))
+print(f'\nModel Score trained with whole train data: {nn_model.score(X_test, y_test)*100}%.')
 voting_score5, std5 = lib.evaluate_classifier(nn_model, X_train, y_train)
 print(f'Model has 5 fold CV {voting_score5 * 100}% \u00B1 {std5 * 100}%.')
 
