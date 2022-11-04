@@ -57,7 +57,7 @@ print('--------------------------------------------')
 # Step 16 -- Setting variance values "1" and re-training the model
 print('\n--------------Custom Model--------------')
 print('Setting variance 1 for all features')
-model = lib.CustomNBClassifier(use_unit_variance=True)
+model = lib.CustomNBClassifier(use_unit_variance=True, var_smoothing=0)
 model.fit(X_train, y_train)  # fitting the model
 score = model.score(X_test, y_test)  # model score
 print('The score of the custom model is:', score * 100, '%.')

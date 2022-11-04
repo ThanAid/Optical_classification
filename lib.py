@@ -293,11 +293,11 @@ class CustomNBClassifier(BaseEstimator, ClassifierMixin):
                 pxc = np.prod((1 / (np.sqrt((2 * np.pi * var[digit])))) * np.exp(  # Calculating the Π(P(x|y))
                     -np.power(X[i] - self.X_mean_[digit], 2) / (2 * var[digit])))
 
-                posterior.append(np.log(pxc) + np.log(self.priors_[digit]))  # appending the result from discriminative
+                posterior.append(np.log(pxc) + np.log(self.priors_[digit]))  # appending the result from discriminant
                 # function for that digit (possibility for that sample to be classified as that digit)
 
             preds.append(posterior.index(max(posterior)))  # append the index of the max value of the posterior list,
-            # meaning that the sample gets classified as the digit with the max likelihood
+            # meaning that the sample gets classified as the digit with the max posterior
 
         return np.array(preds)
 
@@ -604,7 +604,7 @@ def var_smooth_score(X, y, X_valid, y_valid, start_value=1e-9, step=2, log=False
         model = CustomNBClassifier(var_smoothing=var_smoother)
         model.fit(X, y)
         preds = model.predict(X_valid)
-        smoothies[var_smoother] = sum(preds == y_valid)
+        smoothies[var_smoother] = sum(preds == y_valid)/len(y_valid)
 
     y_ax = smoothies.values()
     if not log:
