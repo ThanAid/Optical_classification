@@ -529,6 +529,7 @@ def plot_learning_curve(X, y):
     plt.xlabel("Training Set Size"), plt.ylabel("Accuracy Score"), plt.legend(loc="best")
     plt.tight_layout()
     plt.show()
+    return plt
 
 
 def plot_confusion_matrix(cm, classes,
